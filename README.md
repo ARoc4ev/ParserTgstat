@@ -19,11 +19,11 @@
 
 Синхронный скрипт
 
-    python3 Parser 1.1.py 
+    python3 Parser1.1.py 
 
 Асинхронный скрипт 
 
-    python Parser 1.2.py
+    python Parser1.2.py
  
 
 
