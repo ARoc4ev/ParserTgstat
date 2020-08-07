@@ -85,17 +85,30 @@ def html_get(url, heders, data=None):
     try:
         r = requests.get(url, headers=heders, data=data, timeout=(5, 10))
         return r
-    except requests.exceptions.ConnectTimeout:
-        print('Error get')
-        """ Если ошибка засыпаем на 5 сек"""
-        time.sleep(5)
+    except (requests.exceptions.ConnectTimeout):
+        print(url, data,   'Во аремя запроса произашла ошибка  ConnectTimeout.(Засыпаю на 30 сек)')
+        """ Если ошибка засыпаем на 10 сек"""
+        time.sleep(30)
         return False
+    except requests.exceptions.ReadTimeout:
+        print(url, data,  'Во аремя запроса произашла ошибка ReadTimeout.(Засыпаю на 30 сек')
+        time.sleep(30)
+        return False
+    except requests.exceptions.ConnectionError:
+        print(url,data,  'Во аремя запроса произашла ошибка  ConnectionError.(Засыпаю на 30 сек)')
+        time.sleep(30)
+        return False
+
+
 
 
 def htmls(url, heders, data=None):
     r = False
     while r == False:
         r = html_get(url, heders, data)
+        if r =='Error':
+
+            time.sleep(60)
     return r
 
 
@@ -243,14 +256,9 @@ for channel in channels:
     ObChanel.heders_post['X-CSRF-Token'] = token
 
     Flag = True
-    x = 1 # задержка между запросами
     while Flag:
-        time.sleep(x)
         Flag = parse(ObChanel)
-        if Flag == True:
-            ObChanel.data['page'], ObChanel.data['offset'] = int(ObChanel.data['page']) + 1, int(
-                ObChanel.data['offset']) + 10
-            x = 1
-        elif Flag == "Error":
-            x = 60
+        ObChanel.data['page'], ObChanel.data['offset'] = int(ObChanel.data['page']) + 1, int(
+        ObChanel.data['offset']) + 10
+
         print(ObChanel.data)

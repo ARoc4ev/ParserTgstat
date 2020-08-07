@@ -45,12 +45,21 @@ async def say_after(url, heders):
     print(r)
 
 
-async def get_html(url, heders, params=None):
+async def get_html(url, heders, data=None):
     try:
-        r = await sync_to_async(requests.get)(url, headers=heders, timeout=(5, 10))
+        r = requests.get(url, headers=heders, data=data, timeout=(5, 10))
         return r
-    except requests.exceptions.ConnectTimeout:
-        print('Error get')
+    except (requests.exceptions.ConnectTimeout):
+        print(url, data, 'Во аремя запроса произашла ошибка  ConnectTimeout.(Засыпаю на 30 сек)')
+        """ Если ошибка засыпаем на 10 сек"""
+        time.sleep(5)
+        return False
+    except requests.exceptions.ReadTimeout:
+        print(url, data, 'Во аремя запроса произашла ошибка ReadTimeout.(Засыпаю на 30 сек')
+        time.sleep(5)
+        return False
+    except requests.exceptions.ConnectionError:
+        print(url, data, 'Во аремя запроса произашла ошибка  ConnectionError.(Засыпаю на 30 сек)')
         time.sleep(5)
         return False
 
@@ -67,8 +76,17 @@ async def post_html(url, heders, data):
         r = await sync_to_async(requests.post)(url, headers=heders, data=data, timeout=(5, 10))
         return r
     except requests.exceptions.ConnectTimeout:
-        print('Error get')
-        time.sleep(5)
+        print(url, data, 'Во аремя запроса произашла ошибка  ConnectTimeout.(Засыпаю на 30 сек)')
+        """ Если ошибка засыпаем на 30 сек"""
+        await time.sleep(5)
+        return False
+    except requests.exceptions.ReadTimeout:
+        print(url, data, 'Во аремя запроса произашла ошибка ReadTimeout.(Засыпаю на 30 сек')
+        await time.sleep(5)
+        return False
+    except requests.exceptions.ConnectionError:
+        print(url, data, 'Во аремя запроса произашла ошибка  ConnectionError.(Засыпаю на 30 сек)')
+        await time.sleep(5)
         return False
 
 
@@ -279,12 +297,9 @@ async def start_parser(channel):
     while Flag:
         time.sleep(x)
         Flag = await parse(channel, data, dataTime, headers_post)
-        if Flag == True:
-            data['page'], data['offset'] = int(data['page']) + 1, int(data['offset']) + 10
-            x = 1
-        elif Flag == "Error":
-            x = 60
-        print(data)
+        data['page'], data['offset'] = int(data['page']) + 1, int(data['offset']) + 10
+
+    print('Парсинг канала', channels , 'завершен', data)
 
 
 
@@ -307,12 +322,13 @@ async def worker(name, queue):
 
 async def main(channels):
     # Create a queue that we will use to store our "workload".
-    queue = asyncio.Queue(maxsize=5)
+    queue = asyncio.Queue()
 
     # Generate random timings and put them into the queue.
 
     for _ in channels:
         queue.put_nowait(_)
+    print(queue.qsize())
 
     # Create three worker tasks to process the queue concurrently.
     tasks = []
@@ -321,16 +337,19 @@ async def main(channels):
         tasks.append(task)
 
     # Wait until the queue is fully processed.
-    started_at = time.monotonic()
     await queue.join()
-    total_slept_for = time.monotonic() - started_at
-
     # Cancel our worker tasks.
     for task in tasks:
         task.cancel()
     # Wait until all worker tasks are cancelled.
     await asyncio.gather(*tasks, return_exceptions=True)
 
-channels = ['@theworldisnoteasy', 'AAAAAEwcdHGofxANp6zSOQ']
 
-asyncio.run(main(channels))
+def f(lst, n):
+     return [lst[i:i + n] for i in range(0, len(lst), n)]
+
+channels = ['@theworldisnoteasy', 'AAAAAEwcdHGofxANp6zSOQ', '@breakingmash', '@Cbpub',' @kinogoo_film', 'AAAAAEN9nMLxZYeXTVYbSA']
+
+
+for i in f(channels, 4):
+    asyncio.run(main(i))
