@@ -67,26 +67,26 @@ async def get_html(url, heders, data=None):
 async def request_get(url, heders, params=None):
     r = False
     while r == False:
+        time.sleep(1)
         r = await get_html(url, heders, params)
     return r
 
 
 async def post_html(url, heders, data):
     try:
+        time.sleep(1)
         r = await sync_to_async(requests.post)(url, headers=heders, data=data, timeout=(5, 10))
         return r
     except requests.exceptions.ConnectTimeout:
-        print(url, data, 'Во аремя запроса произашла ошибка  ConnectTimeout.(Засыпаю на 30 сек)')
+        print(url, data, 'Во аремя запроса произашла ошибка  ConnectTimeout.()')
         """ Если ошибка засыпаем на 30 сек"""
-        await time.sleep(5)
         return False
     except requests.exceptions.ReadTimeout:
-        print(url, data, 'Во аремя запроса произашла ошибка ReadTimeout.(Засыпаю на 30 сек')
-        await time.sleep(5)
+        print(url, data, 'Во аремя запроса произашла ошибка ReadTimeout.')
+
         return False
     except requests.exceptions.ConnectionError:
-        print(url, data, 'Во аремя запроса произашла ошибка  ConnectionError.(Засыпаю на 30 сек)')
-        await time.sleep(5)
+        print(url, data, 'Во аремя запроса произашла ошибка  ConnectionError.')
         return False
 
 
@@ -226,7 +226,7 @@ async def parse(name, data, datatime, heders):
     html = await request_post(urls2(name), heders, data=data)
     t = "--- %s seconds ---" % (time.time() - start_time)
     if html.status_code == 200:
-        print('Ok', name, t)
+        print('Ok', name, t, data['page'])
         cars = await sync_to_async(get_content)(html.text, name, datatime)
         return cars
     else:
@@ -299,8 +299,8 @@ async def start_parser(channel):
         Flag = await parse(channel, data, dataTime, headers_post)
         data['page'], data['offset'] = int(data['page']) + 1, int(data['offset']) + 10
 
-    print('Парсинг канала', channels , 'завершен', data)
-
+    print('Парсинг канала', channel , 'завершен', data)
+    return True
 
 
 
@@ -312,9 +312,6 @@ async def worker(name, queue):
         # Get a "work item" out of the queue.
         channel = await queue.get()
         await start_parser(channel)
-
-        # Sleep for the "sleep_for" seconds.
-
         # Notify the queue that the "work item" has been processed.
         queue.task_done()
 
@@ -348,7 +345,7 @@ async def main(channels):
 def f(lst, n):
      return [lst[i:i + n] for i in range(0, len(lst), n)]
 
-channels = ['@theworldisnoteasy', 'AAAAAEwcdHGofxANp6zSOQ', '@breakingmash', '@Cbpub',' @kinogoo_film', 'AAAAAEN9nMLxZYeXTVYbSA']
+channels = ['@theworldisnoteasy', 'AAAAAEwcdHGofxANp6zSOQ', '@breakingmash', '@Cbpub','@kinogoo_film', 'AAAAAEN9nMLxZYeXTVYbSA']
 
 
 for i in f(channels, 4):
